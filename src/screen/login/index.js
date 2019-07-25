@@ -29,7 +29,12 @@ export default function Login(props) {
         value={password}
         secureTextEntry={true}
       />
-      <Button isPrimary title={"Login"} buttonStyle={styles.button} />
+      <Button
+        isPrimary
+        title={'Login'}
+        buttonStyle={styles.button}
+        onPress={() => navigation.navigate('Home')}
+      />
     </View>
   );
 

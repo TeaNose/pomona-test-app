@@ -1,5 +1,7 @@
 export default {
   PRIMARY_COLOR: '#2A97ED',
   SECONDARY_COLOR: 'white',
-  VERY_LIGHT_PINK: '#F0F0F0'
+  VERY_LIGHT_PINK: '#F0F0F0',
+  LIGHT_BLUE_GREY: '#c0cad3',
+  GREENY_BLUE: '#41a5b1'
 };
