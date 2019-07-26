@@ -11,7 +11,7 @@ import styles from './styles';
 import Color from '../../themes/Color';
 
 import { UserContext } from '../../context/user';
-import { callToDoListApi, callEditToDoListApi } from '../../services';
+import { callDeleteItemApi, callEditToDoListApi, callCreateToDoListApi } from '../../services';
 
 export default function Detail(props) {
   const { navigation } = props;
@@ -42,15 +42,63 @@ export default function Detail(props) {
       title,
       note: notes,
       priority: selected.value,
+      authToken: userContext.authToken,
     };
     callEditToDoListApi(params)
       .then(response => {
         console.log('response edit task: '+JSON.stringify(response));
+        setIsLoading(false);
         ToastAndroid.show(
           'Data has been successfully updated',
           ToastAndroid.SHORT
         );
+        navigation.goBack();
+      })
+      .catch(error => {
         setIsLoading(false);
+        alert(error.message);
+      });
+  };
+
+  const submitAdd = () => {
+    setIsLoading(true);
+    const params = {
+      title,
+      note: notes,
+      priority: selected.value,
+      authToken: userContext.authToken,
+    };
+    callCreateToDoListApi(params)
+      .then(response => {
+        console.log('response add task: '+JSON.stringify(response));
+        setIsLoading(false);
+        ToastAndroid.show(
+          'Data has been successfully added',
+          ToastAndroid.SHORT
+        );
+        navigation.goBack();
+      })
+      .catch(error => {
+        console.log(JSON.stringify(error))
+        setIsLoading(false);
+        alert(error.message);
+      });
+  };
+
+  const submitRemove = () => {
+    setIsLoading(true);
+    const params = {
+      id,
+    };
+    callDeleteItemApi(params)
+      .then(response => {
+        console.log('response remove task: '+JSON.stringify(response));
+        setIsLoading(false);
+        ToastAndroid.show(
+          'Data has been successfully removed',
+          ToastAndroid.SHORT
+        );
+        navigation.goBack();
       })
       .catch(error => {
         setIsLoading(false);
@@ -68,9 +116,23 @@ export default function Detail(props) {
           </TouchableWithoutFeedback>
         </View>
         {
-          navigation.getParam('type') === 'Edit' ?
+          navigation.getParam('type') === 'edit' ?
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'flex-end' }}>
-            <Ionicons name={'ios-trash'} size={25} color={Color.SECONDARY_COLOR} />
+            <TouchableWithoutFeedback onPress={() => {
+              Alert.alert(
+                'Remove Task',
+                'Are you sure you want to remove this task?',
+                [
+                  {
+                    text: 'Cancel',
+                    style: 'cancel',
+                  },
+                  {text: 'Ok', onPress: () => submitRemove()},
+                ]
+              );
+            }}>
+              <Ionicons name={'ios-trash'} size={25} color={Color.SECONDARY_COLOR} />
+            </TouchableWithoutFeedback>
           </View> : null
         }
        
@@ -110,14 +172,20 @@ export default function Detail(props) {
             buttonStyle={styles.button}
             onPress={() => {
               Alert.alert(
-                'Edit Task',
-                'Are you sure you want to edit this task?',
+                navigation.getParam('type') === 'edit' ? 'Edit Task' : 'Add Task',
+                navigation.getParam('type') === 'edit' ? 'Are you sure you want to edit this task?' : 'Are you sure you want to add this task?',
                 [
                   {
                     text: 'Cancel',
                     style: 'cancel',
                   },
-                  {text: 'Ok', onPress: () => submitEdit()},
+                  {text: 'Ok', onPress: () => {
+                    if (navigation.getParam('type') === 'edit') {
+                      submitEdit();
+                    } else {
+                      submitAdd();
+                    }
+                  }},
                 ]
               );
             }}

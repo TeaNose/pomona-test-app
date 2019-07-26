@@ -1,5 +1,5 @@
 import { vsprintf } from 'sprintf-js';
-import { callPostApi, callGetApi, callPutApi } from '../utils';
+import { callPostApi, callGetApi, callPutApi, callDeleteApi } from '../utils';
 import { endpoints } from '../constants/endpoints';
 
 export const callLoginApi = params => {
@@ -28,6 +28,14 @@ export const callCreateToDoListApi = params => {
 
 export const callEditToDoListApi = params => {
   return callPutApi(
+    vsprintf(endpoints.detail, params.id),
+    params,
+    params.authToken
+  );
+};
+
+export const callDeleteItemApi = params => {
+  return callDeleteApi(
     vsprintf(endpoints.detail, params.id),
     params,
     params.authToken

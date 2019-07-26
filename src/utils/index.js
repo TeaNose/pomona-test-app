@@ -14,7 +14,9 @@ export const callPostApi = (url, params, authToken) => {
     }
 
     axios
-      .post(Config.API_URL.concat(url), params)
+      .post(Config.API_URL.concat(url), params, {headers: {
+        'Content-Type': 'application/json',
+      }})
       .then(res => {
         try {
           resolve(camelizeKeys(res.data));
@@ -53,6 +55,25 @@ export const callPutApi = (url, params, authToken) => {
 
     axios
       .put(Config.API_URL.concat(url), params)
+      .then(res => {
+        try {
+          resolve(camelizeKeys(res.data));
+        } catch (error) {
+          reject(error);
+        }
+      })
+      .catch(error => reject(error));
+  });
+};
+
+export const callDeleteApi = (url, params, authToken) => {
+  return new Promise((resolve, reject) => {
+    if (authToken) {
+      axios.defaults.headers.common.Authorization = authToken;
+    }
+
+    axios
+      .delete(Config.API_URL.concat(url), params)
       .then(res => {
         try {
           resolve(camelizeKeys(res.data));

@@ -101,7 +101,10 @@ const styles = StyleSheet.create({
     width: 25,
     borderRadius: 15,
     borderColor: Color.LIGHT_BLUE_GREY,
-    borderWidth: 0.5
+    borderWidth: 0.5,
+    backgroundColor: Color.SILVER,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   tabContainer: {
     flexDirection: 'row',

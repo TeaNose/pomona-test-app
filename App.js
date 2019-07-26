@@ -9,6 +9,7 @@
 import React, { Fragment } from "react";
 import { SafeAreaView, StatusBar } from "react-native";
 import { UserProvider } from "./src/context/user";
+import { ToDoProvider } from "./src/context/toDoItem";
 
 import MainNavigator from "./src/config/navigation";
 
@@ -17,9 +18,11 @@ const App = () => {
     <Fragment>
       <StatusBar barStyle="dark-content" />
       <UserProvider>
-        <SafeAreaView style={{flex: 1}}>
-          <MainNavigator />
-        </SafeAreaView>
+        <ToDoProvider>
+          <SafeAreaView style={{flex: 1}}>
+            <MainNavigator />
+          </SafeAreaView>
+        </ToDoProvider>
       </UserProvider>
     </Fragment>
   );

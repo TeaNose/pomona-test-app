@@ -11,17 +11,22 @@ import styles from './styles';
 import Color from '../../themes/Color';
 
 import { UserContext } from '../../context/user';
+import { ToDoContext } from '../../context/toDoItem';
 import { callToDoListApi, callEditToDoListApi } from '../../services';
 
 export default function Home(props) {
   const { navigation } = props;
   const userContext = useContext(UserContext);
+  const toDoContext = useContext(ToDoContext);
 
   const [activeTab, setActiveTab] = useState(0);
   const [q, setQ] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingFull, setIsLoadingFull] = useState(false);
-  const [data, setData] = useState([]);
+  const [isLoadingSearch, setIsLoadingSearch] = useState(false);
+  const [afterSearch, setAfterSearch] = useState(false);
+
+  console.log('toDoContext: '+JSON.stringify(toDoContext.toDoList));
 
   useEffect(() => {
     const params = {
@@ -36,11 +41,13 @@ export default function Home(props) {
     callToDoListApi(params)
       .then(response => {
         console.log('response list: '+JSON.stringify(response));
-        setData(response.data);
+        toDoContext.changeToDoList(response.data);
         setIsLoading(false);
+        setIsLoadingSearch(false);
       })
       .catch(error => {
         setIsLoading(false);
+        setIsLoadingSearch(false);
         alert(error.message);
       });
   };
@@ -55,6 +62,14 @@ export default function Home(props) {
     callEditToDoListApi(params)
       .then(response => {
         console.log('response finish task: '+JSON.stringify(response));
+        let newToDoList = [...toDoContext.toDoList];
+        newToDoList.map((todoItem) => {
+          if (todoItem.id === response.data.id) {
+            todoItem.isDone = true;
+          }
+        })
+        console.log('newToDoList: '+JSON.stringify(newToDoList));
+        toDoContext.changeToDoList(newToDoList);
         setIsLoadingFull(false);
       })
       .catch(error => {
@@ -91,14 +106,14 @@ export default function Home(props) {
                   text: 'Cancel',
                   style: 'cancel',
                 },
-                {text: 'Ok', onPress: () => finishedTask()},
+                {text: 'Ok', onPress: () => finishedTask(item)},
               ]
             );
           }
         }}>
           <View
             style={
-              item.status === 1
+              item.isDone
                 ? styles.doneStatusContainer
                 : styles.notDoneStatusContainer
             }
@@ -159,6 +174,15 @@ export default function Home(props) {
             onChangeText={text => setQ(text)}
             value={q}
             style={styles.search}
+            onSubmitEditing={() => {
+              setAfterSearch(true);
+              const params = {
+                q,
+                filter: activeTab === 0 ? 'all' : activeTab === 1 ? 'done' : 'undone',
+              };
+              console.log('params: '+JSON.stringify(params));
+              callApi(params);
+            }}
           />
           <Ionicons
             name={'ios-search'}
@@ -171,7 +195,16 @@ export default function Home(props) {
           <View style={styles.tabContainer}>
             <TouchableWithoutFeedback
               style={{ flex: 1 }}
-              onPress={() => setActiveTab(0)}
+              onPress={() => {
+                setAfterSearch(true);
+                setIsLoadingSearch(true);
+                setActiveTab(0);
+                const params = {
+                  q,
+                  filter: 'all'
+                };
+                callApi(params);
+              }}
             >
               <View
                 style={activeTab === 0 ? styles.tabActive : styles.tabInactive}
@@ -189,7 +222,16 @@ export default function Home(props) {
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback
               style={{ flex: 1 }}
-              onPress={() => setActiveTab(1)}
+              onPress={() => {
+                setAfterSearch(true);
+                setActiveTab(1);
+                setIsLoadingSearch(true);
+                const params = {
+                  q,
+                  filter: 'done'
+                };
+                callApi(params);
+              }}
             >
               <View
                 style={activeTab === 1 ? styles.tabActive : styles.tabInactive}
@@ -207,7 +249,16 @@ export default function Home(props) {
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback
               style={{ flex: 1 }}
-              onPress={() => setActiveTab(2)}
+              onPress={() => {
+                setAfterSearch(true);
+                setActiveTab(2);
+                setIsLoadingSearch(true);
+                const params = {
+                  q,
+                  filter: 'undone'
+                };
+                callApi(params);
+              }}
             >
               <View
                 style={activeTab === 2 ? styles.tabActive : styles.tabInactive}
@@ -224,11 +275,21 @@ export default function Home(props) {
               </View>
             </TouchableWithoutFeedback>
           </View>
-          <FlatList
-            data={data}
-            keyExtractor={item => item.id.toString()}
-            renderItem={renderRow}
-          />
+          {
+            isLoadingSearch ?
+              <View style={{ alignItems: 'center', paddingTop: 100 }}>
+                <ActivityIndicator size={'small'} color={Color.PRIMARY_COLOR} />
+              </View> : 
+              toDoContext.toDoList.length === 0 && afterSearch ?
+                <View style={{ alignItems: 'center', paddingTop: 100 }}>
+                  <Text style={{ color: Color.PRIMARY_COLOR }}>Data tidak ditemukan</Text>
+                </View> :
+                <FlatList
+                  data={toDoContext.toDoList}
+                  keyExtractor={item => item.id.toString()}
+                  renderItem={renderRow}
+                />
+          }
         </View>
       </View>
     );
@@ -274,7 +335,7 @@ export default function Home(props) {
         <Text style={styles.titleText1}>Hi, How are you,</Text>
         <Text style={styles.titleText2}>Fullname ?</Text>
       </LinearGradient>
-      { data.length > 0 ? renderData() : renderEmptyState()}
+      { toDoContext.toDoList.length > 0 || (afterSearch && toDoContext.toDoList.length === 0) ? renderData() : renderEmptyState()}
     </View>
   );
 }
