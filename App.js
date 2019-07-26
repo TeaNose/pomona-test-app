@@ -8,6 +8,7 @@
 
 import React, { Fragment } from "react";
 import { SafeAreaView, StatusBar } from "react-native";
+import { UserProvider } from "./src/context/user";
 
 import MainNavigator from "./src/config/navigation";
 
@@ -15,9 +16,11 @@ const App = () => {
   return (
     <Fragment>
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView style={{flex: 1}}>
-        <MainNavigator />
-      </SafeAreaView>
+      <UserProvider>
+        <SafeAreaView style={{flex: 1}}>
+          <MainNavigator />
+        </SafeAreaView>
+      </UserProvider>
     </Fragment>
   );
 };

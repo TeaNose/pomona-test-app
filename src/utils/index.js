@@ -1,6 +1,7 @@
 import { Dimensions, Alert } from 'react-native';
 import Config from 'react-native-config';
 import axios from 'axios';
+import { camelizeKeys } from 'humps';
 
 export const getDeviceWidth = () => Dimensions.get('window').width;
 
@@ -13,7 +14,7 @@ export const callPostApi = (url, params, authToken) => {
     }
 
     axios
-      .post(Config.API_URL.concat(url), decamelizeKeys(params))
+      .post(Config.API_URL.concat(url), params)
       .then(res => {
         try {
           resolve(camelizeKeys(res.data));
@@ -51,7 +52,7 @@ export const callPutApi = (url, params, authToken) => {
     }
 
     axios
-      .put(Config.API_URL.concat(url), decamelizeKeys(params))
+      .put(Config.API_URL.concat(url), params)
       .then(res => {
         try {
           resolve(camelizeKeys(res.data));

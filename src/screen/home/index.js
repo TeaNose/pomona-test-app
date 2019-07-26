@@ -1,47 +1,67 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableWithoutFeedback } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, FlatList, TouchableWithoutFeedback, TextInput, ActivityIndicator, Alert } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-community/async-storage';
+
+import Loader from '../../components/loader';
 
 import styles from './styles';
 
 import Color from '../../themes/Color';
-import { TextInput } from 'react-native-gesture-handler';
 
-const data = [
-  {
-    id: 1,
-    title: 'To Do 1',
-    notes: 'Test',
-    priority: 'high',
-    status: 1
-  },
-  {
-    id: 2,
-    title: 'To Do 1',
-    notes: 'Test',
-    priority: 'high',
-    status: 0
-  },
-  {
-    id: 3,
-    title: 'To Do 1',
-    notes: 'Test',
-    priority: 'low',
-    status: 1
-  },
-  {
-    id: 4,
-    title: 'To Do 1',
-    notes: 'Test',
-    priority: 'low',
-    status: 0
-  }
-];
+import { UserContext } from '../../context/user';
+import { callToDoListApi, callEditToDoListApi } from '../../services';
 
 export default function Home(props) {
+  const { navigation } = props;
+  const userContext = useContext(UserContext);
+
   const [activeTab, setActiveTab] = useState(0);
   const [q, setQ] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingFull, setIsLoadingFull] = useState(false);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const params = {
+      q,
+      filter: 'all',
+      authToken: userContext.authToken,
+    };
+    callApi(params);
+  }, []);
+  
+  const callApi = (params) => {
+    callToDoListApi(params)
+      .then(response => {
+        console.log('response list: '+JSON.stringify(response));
+        setData(response.data);
+        setIsLoading(false);
+      })
+      .catch(error => {
+        setIsLoading(false);
+        alert(error.message);
+      });
+  };
+
+  const finishedTask = (item) => {
+    setIsLoadingFull(true);
+    const params = {
+      id: item.id,
+      isDone: true,
+    };
+
+    callEditToDoListApi(params)
+      .then(response => {
+        console.log('response finish task: '+JSON.stringify(response));
+        setIsLoadingFull(false);
+      })
+      .catch(error => {
+        setIsLoadingFull(false);
+        alert(error.message);
+      });
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
@@ -50,28 +70,46 @@ export default function Home(props) {
         It looks live you haven't created any to do list yet. Let's begin by
         clicking the plus button below!
       </Text>
-      <View style={styles.buttonCircle}>
-        <Text style={styles.titleText2}>+</Text>
-      </View>
+      <TouchableWithoutFeedback onPress={() => navigation.navigate('Detail', {type: 'add'})}>
+        <View style={styles.buttonCircle}>
+          <Text style={styles.titleText2}>+</Text>
+        </View>
+      </TouchableWithoutFeedback>
     </View>
   );
 
   const renderRow = ({ item }) => (
     <View style={styles.cardItem}>
       <View style={{ flex: 1, justifyContent: 'center' }}>
-        <View
-          style={
-            item.status === 1
-              ? styles.doneStatusContainer
-              : styles.notDoneStatusContainer
+        <TouchableWithoutFeedback onPress={() => {
+          if (!item.isDone) {
+            Alert.alert(
+              'Finish Task',
+              'Are you sure you want to finish selected task?',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+                {text: 'Ok', onPress: () => finishedTask()},
+              ]
+            );
           }
-        >
-          <Ionicons
-            name={'ios-checkmark'}
-            size={25}
-            color={Color.SECONDARY_COLOR}
-          />
-        </View>
+        }}>
+          <View
+            style={
+              item.status === 1
+                ? styles.doneStatusContainer
+                : styles.notDoneStatusContainer
+            }
+          >
+            <Ionicons
+              name={'ios-checkmark'}
+              size={25}
+              color={Color.SECONDARY_COLOR}
+            />
+          </View>
+        </TouchableWithoutFeedback>
       </View>
       <View style={{ flex: 8, paddingLeft: 10 }}>
         <View style={{ flex: 1, flexDirection: 'row' }}>
@@ -94,22 +132,27 @@ export default function Home(props) {
             )}
           </View>
         </View>
+        
         <View>
-          <Text style={styles.descText}>{item.notes}</Text>
+          <Text style={styles.descText}>{item.note}</Text>
         </View>
       </View>
-      <View style={{ flex: 1, alignItems: 'flex-end' }}>
-        <Ionicons name={'ios-create'} size={20} color={Color.PRIMARY_COLOR} />
-      </View>
+      <TouchableWithoutFeedback onPress={() => navigation.navigate('Detail', {item, type: 'edit'})}>
+        <View style={{ flex: 1, alignItems: 'flex-end' }}>
+          <Ionicons name={'ios-create'} size={20} color={Color.PRIMARY_COLOR} />
+        </View>
+      </TouchableWithoutFeedback>
     </View>
   );
 
   const renderData = () => {
     return (
       <View style={{ flex: 1 }}>
-        <View style={styles.buttonCircleAbsolute}>
-          <Text style={styles.titleText2}>+</Text>
-        </View>
+        <TouchableWithoutFeedback onPress={() => navigation.navigate('Detail', {type: 'add'})}>
+          <View style={styles.buttonCircleAbsolute}>
+            <Text style={styles.titleText2}>+</Text>
+          </View>
+        </TouchableWithoutFeedback>
         <View style={styles.searchContainer}>
           <TextInput
             placeholder={"Search to do activity"}
@@ -191,18 +234,47 @@ export default function Home(props) {
     );
   };
 
+  const logout = () => {
+    AsyncStorage.removeItem('authToken');
+    navigation.replace('Login');
+  }
+
+  if (isLoading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size={'large'} color={Color.PRIMARY_COLOR} />
+      </View>
+    )
+  }
+
   return (
     <View style={styles.mainContainer}>
+      <Loader modalVisible={isLoadingFull} />
       <LinearGradient
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         colors={[Color.PRIMARY_COLOR, Color.SECONDARY_COLOR]}
         style={styles.headerContainer}
       >
+        <View style={{alignItems: 'flex-end'}}>
+          <TouchableWithoutFeedback onPress={() => Alert.alert(
+            'Logout',
+            'Are you sure you want to logout?',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel',
+              },
+              {text: 'Ok', onPress: () => logout()},
+            ]
+          )}>
+            <Ionicons name={'ios-exit'} size={30} color={Color.PRIMARY_COLOR} />
+          </TouchableWithoutFeedback>
+        </View>
         <Text style={styles.titleText1}>Hi, How are you,</Text>
         <Text style={styles.titleText2}>Fullname ?</Text>
       </LinearGradient>
-      {renderData()}
+      { data.length > 0 ? renderData() : renderEmptyState()}
     </View>
   );
 }

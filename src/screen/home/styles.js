@@ -7,6 +7,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Color.SECONDARY_COLOR
   },
+  loaderContainer: {
+    flex: 1,
+    backgroundColor: Color.SECONDARY_COLOR,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
@@ -50,13 +56,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: 20
+    marginBottom: 20,
   },
   buttonCircle: {
     backgroundColor: Color.PRIMARY_COLOR,
     height: 40,
     width: 40,
-    borderRadius: 20
+    borderRadius: 20,
+    alignItems: 'center'
   },
   buttonCircleAbsolute: {
     backgroundColor: Color.PRIMARY_COLOR,
