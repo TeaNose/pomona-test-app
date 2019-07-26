@@ -11,42 +11,54 @@ import styles from './styles';
 import Color from '../../themes/Color';
 
 import { UserContext } from '../../context/user';
+import { ToDoContext } from '../../context/toDoItem';
 import { callDeleteItemApi, callEditToDoListApi, callCreateToDoListApi } from '../../services';
 
 export default function Detail(props) {
   const { navigation } = props;
   const userContext = useContext(UserContext);
+  const toDoContext = useContext(ToDoContext);
+
   const detailParam = navigation.getParam('item');
 
   const options = [
     {
       label: 'High',
-      value: 1
+      value: 2
     },
     {
       label: 'Low',
-      value: 0
+      value: 1
     }
   ];
 
   const [id, setId] = useState(detailParam ? detailParam.id : -99);
   const [title, setTitle] = useState(detailParam ? detailParam.title : '');
   const [notes, setNotes] = useState(detailParam ? detailParam.note : '');
-  const [selected, setSelected] = useState(detailParam && detailParam.priority === 1 ? options[0] : options[1]);
+  const [selected, setSelected] = useState(detailParam && detailParam.priority === 2 ? options[0] : options[1]);
   const [isLoading, setIsLoading] = useState(false);
 
   const submitEdit = () => {
     setIsLoading(true);
     const params = {
-      id,
-      title,
+      id: id,
+      title: title,
       note: notes,
       priority: selected.value,
-      authToken: userContext.authToken,
+      isDone: detailParam.isDone
     };
     callEditToDoListApi(params)
       .then(response => {
-        console.log('response edit task: '+JSON.stringify(response));
+        const newToDoList = [...toDoContext.toDoList];
+        newToDoList.map((todoItem) => {
+          if (todoItem.id === response.data.id) {
+            todoItem.title = response.data.title;
+            todoItem.note = response.data.note;
+            todoItem.priority = response.data.priority;
+          }
+        })
+        toDoContext.changeToDoList(newToDoList);
+
         setIsLoading(false);
         ToastAndroid.show(
           'Data has been successfully updated',
@@ -63,14 +75,16 @@ export default function Detail(props) {
   const submitAdd = () => {
     setIsLoading(true);
     const params = {
-      title,
+      title: title,
       note: notes,
-      priority: selected.value,
-      authToken: userContext.authToken,
+      priority: selected.value
     };
     callCreateToDoListApi(params)
       .then(response => {
-        console.log('response add task: '+JSON.stringify(response));
+        const newToDoList = [...toDoContext.toDoList];
+        newToDoList.unshift(response.data);
+        toDoContext.changeToDoList(newToDoList);
+
         setIsLoading(false);
         ToastAndroid.show(
           'Data has been successfully added',
@@ -79,7 +93,6 @@ export default function Detail(props) {
         navigation.goBack();
       })
       .catch(error => {
-        console.log(JSON.stringify(error))
         setIsLoading(false);
         alert(error.message);
       });
@@ -88,11 +101,14 @@ export default function Detail(props) {
   const submitRemove = () => {
     setIsLoading(true);
     const params = {
-      id,
+      id: id,
     };
     callDeleteItemApi(params)
       .then(response => {
-        console.log('response remove task: '+JSON.stringify(response));
+        let newToDoList = [...toDoContext.toDoList];
+        newToDoList = newToDoList.filter((item) => item.id !== id);
+        toDoContext.changeToDoList(newToDoList);
+
         setIsLoading(false);
         ToastAndroid.show(
           'Data has been successfully removed',

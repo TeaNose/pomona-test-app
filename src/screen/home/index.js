@@ -26,8 +26,6 @@ export default function Home(props) {
   const [isLoadingSearch, setIsLoadingSearch] = useState(false);
   const [afterSearch, setAfterSearch] = useState(false);
 
-  console.log('toDoContext: '+JSON.stringify(toDoContext.toDoList));
-
   useEffect(() => {
     const params = {
       q,
@@ -40,7 +38,6 @@ export default function Home(props) {
   const callApi = (params) => {
     callToDoListApi(params)
       .then(response => {
-        console.log('response list: '+JSON.stringify(response));
         toDoContext.changeToDoList(response.data);
         setIsLoading(false);
         setIsLoadingSearch(false);
@@ -61,14 +58,12 @@ export default function Home(props) {
 
     callEditToDoListApi(params)
       .then(response => {
-        console.log('response finish task: '+JSON.stringify(response));
         let newToDoList = [...toDoContext.toDoList];
         newToDoList.map((todoItem) => {
           if (todoItem.id === response.data.id) {
             todoItem.isDone = true;
           }
         })
-        console.log('newToDoList: '+JSON.stringify(newToDoList));
         toDoContext.changeToDoList(newToDoList);
         setIsLoadingFull(false);
       })
@@ -132,7 +127,7 @@ export default function Home(props) {
             <Text style={styles.titleText3}>{item.title}</Text>
           </View>
           <View style={{ justifyContent: 'center' }}>
-            {item.priority === 'high' ? (
+            {item.priority === 2 ? (
               <Ionicons
                 name={'md-arrow-dropup-circle'}
                 size={16}
@@ -180,7 +175,6 @@ export default function Home(props) {
                 q,
                 filter: activeTab === 0 ? 'all' : activeTab === 1 ? 'done' : 'undone',
               };
-              console.log('params: '+JSON.stringify(params));
               callApi(params);
             }}
           />
@@ -332,8 +326,8 @@ export default function Home(props) {
             <Ionicons name={'ios-exit'} size={30} color={Color.PRIMARY_COLOR} />
           </TouchableWithoutFeedback>
         </View>
-        <Text style={styles.titleText1}>Hi, How are you,</Text>
-        <Text style={styles.titleText2}>Fullname ?</Text>
+        <Text style={styles.titleText1}>Hi! How are you,</Text>
+        <Text style={styles.titleText2}>Dude?</Text>
       </LinearGradient>
       { toDoContext.toDoList.length > 0 || (afterSearch && toDoContext.toDoList.length === 0) ? renderData() : renderEmptyState()}
     </View>

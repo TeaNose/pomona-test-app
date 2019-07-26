@@ -88,7 +88,6 @@ export default function Login(props) {
 
 			callRegisterApi(params)
 				.then(async response => {
-					console.log('response register: ' + JSON.stringify(response));
 					await AsyncStorage.setItem('authToken', response.data.token);
 					userContext.changeAuthToken(response.data.token);
 					setIsLoading(false);
