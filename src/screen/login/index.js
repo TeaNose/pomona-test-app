@@ -7,6 +7,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Button from '../../components/button';
 import Loader from '../../components/loader';
 
+import { validateEmail } from '../../utils';
+
 import styles from './styles';
 import Color from '../../themes/Color';
 
@@ -44,7 +46,9 @@ export default function Login(props) {
 
 	const submitLogin = () => {
 		if (email === '' || !email || password === '' || !password) {
-			alert('Semua field harus diisi');
+			alert('All fields must be filled');
+		} else if (!validateEmail(email)) {
+			alert('Incorrect email format');
 		} else {
 			setIsLoading(true);
 
@@ -74,9 +78,11 @@ export default function Login(props) {
 
 	const submitRegister = () => {
 		if (email === '' || !email || password === '' || !password || name === '' || !name || confirmPassword === '' || !confirmPassword) {
-			alert('Semua field harus diisi');
+			alert('All fields must be filled');
 		} else if (password !== confirmPassword) {
-			alert('Password tidak sama');
+			alert('Wrong inputted password');
+		} else if (!validateEmail(email)) {
+			alert('Incorrect email format');
 		} else {
 			setIsLoading(true);
 

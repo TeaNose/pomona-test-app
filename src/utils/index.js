@@ -7,6 +7,10 @@ export const getDeviceWidth = () => Dimensions.get('window').width;
 
 export const getDeviceHeight = () => Dimensions.get('window').height;
 
+export const validateEmail = (email) => {
+  return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email);
+}
+
 export const callPostApi = (url, params, authToken) => {
   return new Promise((resolve, reject) => {
     if (authToken) {
